@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card" style="max-width: 600px; margin: 40px auto; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <h2 style="text-align: center; color: #10b981; margin-bottom: 20px; font-weight: 700;">
+        <i class="fas fa-sms"></i> Auto-Add Expense
+    </h2>
+    <p style="text-align: center; color: #64748b; margin-bottom: 30px; font-size: 15px; line-height: 1.5;">
+        Paste your bank or payment transaction SMS below. Our smart parser will automatically extract the amount, detect the merchant, and categorize your expense instantly!
+    </p>
+
+    <form method="POST">
+        <div class="form-group" style="margin-bottom: 25px;">
+            <label for="sms_text" style="font-weight: 600; color: #334155; margin-bottom: 8px; display: block;">
+                <i class="fas fa-comment-dots" style="color: #6366f1;"></i> Paste Transaction SMS
+            </label>
+            <textarea name="sms_text" id="sms_text" rows="5" required 
+                      placeholder="e.g. Rs.450 debited from A/C XXXX via UPI to Swiggy on 12-Mar"
+                      style="width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; resize: vertical; font-size: 16px; transition: border-color 0.3s;"></textarea>
+            <small style="color: #94a3b8; display: block; margin-top: 6px;">Supported formats: UPI, Card, NetBanking</small>
+        </div>
+        
+        <div style="text-align: center;">
+            <button type="submit" class="btn" style="width: 100%; justify-content: center; font-size: 16px; padding: 14px; background-color: #10b981; color: white; border-radius: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+                <i class="fas fa-microchip"></i> Analyze & Add Expense
+            </button>
+        </div>
+    </form>
+    
+    <div style="margin-top: 25px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+        <a href="{{ url_for('index') }}" style="color: #64748b; text-decoration: none; font-size: 14px; transition: color 0.3s;">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<style>
+    textarea:focus {
+        outline: none;
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    
+    button[type="submit"]:hover {
+        background-color: #059669 !important;
+        transform: translateY(-2px);
+    }
+</style>
+
+{% endblock %}

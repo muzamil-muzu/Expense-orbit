@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-calendar-alt"></i> Recurring Subscriptions</h1>
+    <p class="page-subtitle">Manage your monthly recurring expenses</p>
+</div>
+
+<!-- Summary Card -->
+<div class="summary-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 30px;">
+    <div class="card savings">
+        <h3><i class="fas fa-money-bill-wave"></i> Total Monthly Fixed Costs</h3>
+        <p>₹ {{ total_fixed }}</p>
+    </div>
+    <div class="card expense">
+        <h3><i class="fas fa-list"></i> Active Subscriptions</h3>
+        <p>{{ subscriptions|length }}</p>
+    </div>
+</div>
+
+<!-- Subscriptions Card -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-stream"></i> Your Subscriptions</h3>
+        <a class="btn btn-primary" href="{{ url_for('add_subscription') }}" style="margin-left: auto;">
+            <i class="fas fa-plus"></i> Add Subscription
+        </a>
+    </div>
+
+    {% if subscriptions %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-tag"></i> Name</th>
+                    <th><i class="fas fa-money-bill"></i> Amount</th>
+                    <th><i class="fas fa-folder"></i> Category</th>
+                    <th><i class="fas fa-calendar-days"></i> Billing Day</th>
+                    <th><i class="fas fa-clock"></i> Last Processed</th>
+                    <th style="text-align: center;"><i class="fas fa-cog"></i> Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in subscriptions %}
+                <tr>
+                    <td>
+                        <strong>{{ sub.name }}</strong>
+                    </td>
+                    <td style="color: #ef4444; font-weight: 600;">₹ {{ "%.2f"|format(sub.amount) }}</td>
+                    <td>
+                        <span class="badge badge-info">{{ sub.category }}</span>
+                    </td>
+                    <td>
+                        <span style="background: #f1f5f9; padding: 6px 12px; border-radius: 6px; font-weight: 600;">
+                            {{ sub.billing_day }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if sub.last_processed_date %}
+                            {{ sub.last_processed_date.strftime('%d %b %Y') }}
+                        {% else %}
+                            <span class="badge badge-warning"><i class="fas fa-hourglass"></i> Pending</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        <form action="{{ url_for('delete_subscription', id=sub.id) }}" method="POST" style="display:inline;" 
+                              onsubmit="return confirm('Are you sure you want to cancel this subscription?');">
+                            <button type="submit" class="btn-icon btn-icon-danger" title="Delete subscription">
+                                <i class="fas fa-trash-alt" style="color: #ef4444;"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div style="text-align: center; padding: 60px 20px;">
+        <i style="font-size: 64px; color: #cbd5e1; margin-bottom: 20px; display: block;">
+            <i class="fas fa-inbox"></i>
+        </i>
+        <p style="color: #64748b; margin-bottom: 20px; font-size: 16px;">
+            <strong>No active subscriptions</strong>
+        </p>
+        <p style="color: #cbd5e1; margin-bottom: 30px;">
+            Add your first subscription to start tracking recurring expenses
+        </p>
+        <a class="btn btn-primary" href="{{ url_for('add_subscription') }}">
+            <i class="fas fa-plus"></i> Add Your First Subscription
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Info Box -->
+<div style="margin-top: 30px; padding: 20px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; border-left: 4px solid #6366f1;">
+    <h3 style="font-size: 14px; color: #6366f1; margin-bottom: 12px; font-weight: 600;">
+        <i class="fas fa-lightbulb"></i> Subscription Management Tips
+    </h3>
+    <ul style="font-size: 13px; color: #64748b; margin-left: 0; list-style: none; line-height: 1.8;">
+        <li><i class="fas fa-check" style="color: #6366f1; margin-right: 8px;"></i> Track all monthly recurring payments in one place</li>
+        <li><i class="fas fa-check" style="color: #6366f1; margin-right: 8px;"></i> Review subscriptions regularly to avoid unnecessary charges</li>
+        <li><i class="fas fa-check" style="color: #6366f1; margin-right: 8px;"></i> Set billing day date for accurate tracking</li>
+    </ul>
+</div>
+
+<style>
+    .btn-icon-danger {
+        width: 36px;
+        height: 36px;
+        padding: 6px;
+        border-radius: 6px;
+        background: rgba(239, 68, 68, 0.1);
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-icon-danger:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: scale(1.1);
+    }
+</style>
+
+{% endblock %}

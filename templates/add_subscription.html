@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-plus-circle"></i> Add Recurring Subscription</h1>
+    <p class="page-subtitle">Track monthly recurring expenses</p>
+</div>
+
+<!-- Form Card -->
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <form method="POST">
+        <!-- Subscription Name Group -->
+        <div class="form-group">
+            <label for="name"><i class="fas fa-tag"></i> Subscription Name</label>
+            <input type="text" id="name" name="name" placeholder="e.g., Netflix, Spotify, Rent" 
+                   list="services" required>
+            <datalist id="services">
+                <option value="Netflix">
+                <option value="Spotify">
+                <option value="Amazon Prime">
+                <option value="Gym Membership">
+                <option value="Internet">
+                <option value="Mobile Plan">
+                <option value="Rent">
+                <option value="Insurance">
+                <option value="Cloud Storage">
+            </datalist>
+        </div>
+
+        <!-- Amount Group -->
+        <div class="form-group">
+            <label for="amount"><i class="fas fa-money-bill"></i> Monthly Amount</label>
+            <div style="display: flex; gap: 10px;">
+                <span style="display: flex; align-items: center; padding: 0 14px; background: #f1f5f9; border-radius: 8px 0 0 8px; font-weight: 600; color: #64748b;">₹</span>
+                <input type="number" id="amount" name="amount" placeholder="0.00" step="0.01" required 
+                       style="border-radius: 0 8px 8px 0; flex: 1;">
+            </div>
+        </div>
+
+        <!-- Category Group -->
+        <div class="form-group">
+            <label for="category"><i class="fas fa-folder"></i> Category</label>
+            <input type="text" id="category" name="category" placeholder="e.g., Entertainment, Subscriptions" 
+                   list="subcategories" required>
+            <datalist id="subcategories">
+                <option value="Entertainment">
+                <option value="Subscriptions">
+                <option value="Utilities">
+                <option value="Shopping">
+                <option value="Healthcare">
+                <option value="Education">
+                <option value="Home">
+                <option value="Other">
+            </datalist>
+        </div>
+
+        <!-- Billing Day Group -->
+        <div class="form-group">
+            <label for="billing_day"><i class="fas fa-calendar-days"></i> Billing Day of Month</label>
+            <input type="number" id="billing_day" name="billing_day" min="1" max="31" placeholder="1-31" required>
+            <small style="color: #64748b; font-size: 12px; margin-top: 8px; display: block;">
+                <i class="fas fa-info-circle"></i> This subscription will be automatically logged on the selected day each month.
+            </small>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display: flex; gap: 12px; margin-top: 30px;">
+            <button type="submit" class="btn" style="flex: 1; justify-content: center;">
+                <i class="fas fa-save"></i> Save Subscription
+            </button>
+            <a href="{{ url_for('subscriptions') }}" class="btn btn-outline" style="flex: 1; justify-content: center; text-decoration: none;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+
+    <!-- Subscription Tips -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+        <h3 style="font-size: 14px; color: #64748b; margin-bottom: 12px;">
+            <i class="fas fa-lightbulb"></i> Subscription Management Tips
+        </h3>
+        <ul style="font-size: 13px; color: #64748b; margin-left: 0; list-style: none; line-height: 1.8;">
+            <li><i class="fas fa-check" style="color: #10b981;"></i> Enter the exact monthly amount</li>
+            <li><i class="fas fa-check" style="color: #10b981;"></i> Use the day your billing occurs</li>
+            <li><i class="fas fa-check" style="color: #10b981;"></i> Review unused subscriptions regularly</li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-plus-circle"></i> Add Expense</h1>
+    <p class="page-subtitle">Record a new expense transaction</p>
+</div>
+
+<!-- Form Card -->
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <form method="POST">
+        <!-- Amount Group -->
+        <div class="form-group">
+            <label for="amount"><i class="fas fa-money-bill"></i> Amount</label>
+            <div style="display: flex;">
+                <span style="display: flex; align-items: center; padding: 0 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-right: none; border-radius: 8px 0 0 8px; font-weight: 600; color: var(--text-muted);">₹</span>
+                <input type="number" id="amount" name="amount" placeholder="0.00" step="0.01" required 
+                       style="border-radius: 0 8px 8px 0; flex: 1;">
+            </div>
+        </div>
+
+        <!-- Category Group -->
+        <div class="form-group">
+            <label for="category"><i class="fas fa-tag"></i> Category</label>
+            <input type="text" id="category" name="category" placeholder="e.g., Food, Transport, Entertainment" 
+                   list="categories" required>
+            <datalist id="categories">
+                <option value="Food">
+                <option value="Transport">
+                <option value="Entertainment">
+                <option value="Shopping">
+                <option value="Utilities">
+                <option value="Healthcare">
+                <option value="Education">
+                <option value="Other">
+            </datalist>
+        </div>
+
+        <!-- Note Group -->
+        <div class="form-group">
+            <label for="note"><i class="fas fa-note-sticky"></i> Note / Description</label>
+            <input type="text" id="note" name="note" placeholder="Add a note (optional)">
+        </div>
+
+        <!-- Date Group -->
+        <div class="form-group">
+            <label for="date"><i class="fas fa-calendar"></i> Date</label>
+            <input type="date" id="date" name="date" required>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display: flex; gap: 12px; margin-top: 30px;">
+            <button type="submit" class="btn" style="flex: 1; justify-content: center;">
+                <i class="fas fa-save"></i> Save Expense
+            </button>
+            <a href="/" class="btn btn-outline" style="flex: 1; justify-content: center; text-decoration: none;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+
+    <!-- Quick Tips -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+        <h3 style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase;">
+            <i class="fas fa-lightbulb"></i> Quick Tips
+        </h3>
+        <ul style="font-size: 14px; color: var(--text-secondary); margin-left: 0; list-style: none; line-height: 1.8;">
+            <li><i class="fas fa-check" style="color: var(--success); margin-right: 8px;"></i> Be accurate with amounts</li>
+            <li><i class="fas fa-check" style="color: var(--success); margin-right: 8px;"></i> Use consistent category names</li>
+            <li><i class="fas fa-check" style="color: var(--success); margin-right: 8px;"></i> Add descriptions for better tracking</li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}

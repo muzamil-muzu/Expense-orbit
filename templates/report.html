@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-file-pdf"></i> Financial Report</h1>
+    <p class="page-subtitle">Generate PDF reports for your financial records</p>
+</div>
+
+<!-- Report Downloads Card -->
+<div class="card" style="max-width: 600px; margin: 0 auto; margin-bottom: 30px;">
+    <div class="card-header">
+        <h3><i class="fas fa-download"></i> Download Reports</h3>
+    </div>
+
+    <div style="padding: 20px;">
+        <p style="color: #64748b; margin-bottom: 20px;">
+            <i class="fas fa-info-circle"></i> Download a PDF report of your financial summary and transactions.
+        </p>
+
+        <a href="{{ url_for('index') }}" class="btn" style="width: 100%; justify-content: center;">
+            <i class="fas fa-file-pdf"></i> Generate PDF Report
+        </a>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="summary-grid" style="margin-bottom: 30px;">
+    <div class="card income">
+        <h3><i class="fas fa-arrow-down" style="color: #10b981;"></i> Total Income</h3>
+        <p>₹ 0.00</p>
+    </div>
+
+    <div class="card expense">
+        <h3><i class="fas fa-arrow-up" style="color: #ef4444;"></i> Total Expense</h3>
+        <p>₹ 0.00</p>
+    </div>
+
+    <div class="card savings">
+        <h3><i class="fas fa-piggy-bank" style="color: #6366f1;"></i> Net Balance</h3>
+        <p>₹ 0.00</p>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<h2 style="margin-bottom: 20px;"><i class="fas fa-chart-bar"></i> Monthly Analysis</h2>
+
+<div class="chart-container">
+    <div class="chart-box">
+        <h3 style="text-align: center; margin-bottom: 20px;">
+            <i class="fas fa-chart-bar"></i> Income vs Expense Trend
+        </h3>
+        <canvas id="reportBarChart"></canvas>
+    </div>
+
+    <div class="chart-box">
+        <h3 style="text-align: center; margin-bottom: 20px;">
+            <i class="fas fa-chart-line"></i> Monthly Savings
+        </h3>
+        <canvas id="reportLineChart"></canvas>
+    </div>
+</div>
+
+<!-- Info Box -->
+<div style="margin-top: 30px; padding: 20px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; border-left: 4px solid #6366f1;">
+    <h3 style="font-size: 14px; color: #6366f1; margin-bottom: 12px; font-weight: 600;">
+        <i class="fas fa-lightbulb"></i> Report Features
+    </h3>
+    <ul style="font-size: 13px; color: #64748b; margin-left: 0; list-style: none; line-height: 1.8;">
+        <li><i class="fas fa-check" style="color: #6366f1; margin-right: 8px;"></i> Download PDF reports with detailed transaction history</li>
+        <li><i class="fas fa-check" style="color: #6366f1; margin-right: 8px;"></i> Visual charts and graphs for trend analysis</li>
+        <li><i class="fas fa-check" style="color: #6366f1; margin-right: 8px;"></i> Monthly and yearly summaries</li>
+    </ul>
+</div>
+
+<script>
+    // Sample report chart data
+    const reportBarCtx = document.getElementById('reportBarChart').getContext('2d');
+    new Chart(reportBarCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [
+                {
+                    label: 'Income',
+                    data: [5000, 5000, 5000, 5000, 5000, 5000],
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 2,
+                    borderRadius: 6
+                },
+                {
+                    label: 'Expense',
+                    data: [3500, 3200, 3800, 3400, 3600, 3300],
+                    backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                    borderColor: 'rgba(239, 68, 68, 1)',
+                    borderWidth: 2,
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        font: { size: 12, weight: '600' },
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: (value) => '₹' + value }
+                }
+            }
+        }
+    });
+
+    const reportLineCtx = document.getElementById('reportLineChart').getContext('2d');
+    new Chart(reportLineCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Monthly Savings',
+                data: [1500, 1800, 1200, 1600, 1400, 1700],
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: '#6366f1',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        font: { size: 12, weight: '600' },
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: (value) => '₹' + value }
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

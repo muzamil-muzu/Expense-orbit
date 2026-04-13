@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker Pro</title>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .flash {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            animation: slideDown 0.5s ease;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div>
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-satellite"></i> ExpenseOrbit
+            </a>
+        </div>
+        <div class="navbar-nav">
+            <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="/add"><i class="fas fa-plus-circle"></i> Add Expense</a>
+            <a href="/add_income"><i class="fas fa-money-bill"></i> Add Income</a>
+            <a href="{{ url_for('subscriptions') }}"><i class="fas fa-calendar-alt"></i> Subscriptions</a>
+            <a href="{{ url_for('download_report', month=request.args.get('month')) }}"><i class="fas fa-chart-bar"></i> Report</a>
+            <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div style="position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;">
+                {% for category, message in messages %}
+                <div class="toast" style="position: relative; top: 0; right: 0; border-left-color: var(--{{ category if category in ['success', 'danger', 'warning', 'info'] else 'primary' }}); pointer-events: auto;">
+                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'info-circle' if category == 'info' else 'exclamation-circle' }}" style="color: var(--{{ category if category in ['success', 'danger', 'warning', 'info'] else 'primary' }}); font-size: 1.2rem;"></i>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+    </div>
+
+</body>
+</html>

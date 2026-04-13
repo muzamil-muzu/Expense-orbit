@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-bullseye"></i> Set Monthly Budget</h1>
+    <p class="page-subtitle">Define spending limits for each category</p>
+</div>
+
+<!-- Budget Card -->
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <form method="POST">
+        <div class="form-group">
+            <label for="category"><i class="fas fa-tag"></i> Category Name</label>
+            <input type="text" id="category" name="category" placeholder="e.g., Food, Entertainment" 
+                   list="categories" required>
+            <datalist id="categories">
+                <option value="Food">
+                <option value="Transport">
+                <option value="Entertainment">
+                <option value="Shopping">
+                <option value="Utilities">
+                <option value="Healthcare">
+                <option value="Education">
+                <option value="Subscriptions">
+                <option value="Other">
+            </datalist>
+        </div>
+
+        <div class="form-group">
+            <label for="budget"><i class="fas fa-money-bill"></i> Monthly Budget Limit</label>
+            <div style="display: flex; gap: 10px;">
+                <span style="display: flex; align-items: center; padding: 0 14px; background: #f1f5f9; border-radius: 8px 0 0 8px; font-weight: 600; color: #64748b;">₹</span>
+                <input type="number" id="budget" name="budget" placeholder="0.00" step="0.01" required 
+                       style="border-radius: 0 8px 8px 0; flex: 1;">
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display: flex; gap: 12px; margin-top: 30px;">
+            <button type="submit" class="btn" style="flex: 1; justify-content: center;">
+                <i class="fas fa-save"></i> Save Budget
+            </button>
+            <a href="/" class="btn btn-outline" style="flex: 1; justify-content: center; text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </form>
+
+    <!-- Budget Tips -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+        <h3 style="font-size: 14px; color: #64748b; margin-bottom: 12px;">
+            <i class="fas fa-lightbulb"></i> Budget Tips
+        </h3>
+        <ul style="font-size: 13px; color: #64748b; margin-left: 0; list-style: none; line-height: 1.8;">
+            <li><i class="fas fa-check" style="color: #10b981;"></i> Set realistic limits based on your income</li>
+            <li><i class="fas fa-check" style="color: #10b981;"></i> Review and adjust monthly</li>
+            <li><i class="fas fa-check" style="color: #10b981;"></i> Track spending to stay within limits</li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+<!-- Page Header -->
+<div class="page-header" style="margin-bottom: 30px;">
+    <h1><i class="fas fa-chart-line"></i> Welcome, {{ session['user_name'] }}!</h1>
+    <p class="page-subtitle">Here's your financial overview for <strong>{{ readable_month }}</strong></p>
+</div>
+
+<!-- Month Filter -->
+<div class="card" style="margin-bottom: 25px;">
+    <div class="card-header">
+        <h3><i class="fas fa-calendar-alt"></i> Select Period</h3>
+    </div>
+    <form method="GET" action="{{ url_for('index') }}" style="display: flex; gap: 15px; align-items: center;">
+        <div class="form-group" style="margin: 0; flex: 1; max-width: 200px;">
+            <input type="month" name="month" value="{{ selected_month }}" style="padding: 10px 14px;">
+        </div>
+        <button type="submit" class="btn"><i class="fas fa-filter"></i> Filter</button>
+    </form>
+</div>
+
+<!-- Summary Stats Grid -->
+<div class="summary-grid">
+    <div class="card income" style="animation: fadeInUp 0.5s ease backwards; animation-delay: 0.1s;">
+        <h3><i class="fas fa-arrow-down"
+                style="color: #34d399; filter: drop-shadow(0 0 5px rgba(52, 211, 153, 0.5));"></i> Total Income</h3>
+        <p>₹ {{ total_income }}</p>
+    </div>
+
+    <div class="card expense" style="animation: fadeInUp 0.5s ease backwards; animation-delay: 0.2s;">
+        <h3><i class="fas fa-arrow-up"
+                style="color: #f87171; filter: drop-shadow(0 0 5px rgba(248, 113, 113, 0.5));"></i> Total Expense</h3>
+        <p>₹ {{ total_expense }}</p>
+    </div>
+
+    <div class="card savings" style="animation: fadeInUp 0.5s ease backwards; animation-delay: 0.3s;">
+        <h3><i class="fas fa-piggy-bank"
+                style="color: #818cf8; filter: drop-shadow(0 0 5px rgba(129, 140, 248, 0.5));"></i> Savings</h3>
+        <p>₹ {{ savings }}</p>
+    </div>
+
+    <div class="card score" style="animation: fadeInUp 0.5s ease backwards; animation-delay: 0.4s;">
+        <h3><i class="fas fa-star" style="color: #38bdf8; filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.5));"></i>
+            Financial Score</h3>
+        <p>{{ score }}/100</p>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card" style="margin-bottom: 25px; animation: fadeInUp 0.5s ease backwards; animation-delay: 0.5s;">
+    <div class="card-header">
+        <h3><i class="fas fa-bolt"
+                style="color: var(--warning); filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.5));"></i> Quick Actions
+        </h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+        <a class="btn btn-primary" href="{{ url_for('add_expense') }}" style="justify-content: center;">
+            <i class="fas fa-plus-circle"></i> Add Expense
+        </a>
+        <a class="btn btn-secondary" href="{{ url_for('add_income') }}" style="justify-content: center;">
+            <i class="fas fa-money-bill"></i> Add Income
+        </a>
+        <a class="btn" href="{{ url_for('add_auto_expense') }}"
+            style="justify-content: center; background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+            <i class="fas fa-sms"></i> Auto-Add (SMS)
+        </a>
+        <a class="btn btn-primary" href="{{ url_for('set_budget') }}" style="justify-content: center;">
+            <i class="fas fa-bullseye"></i> Set Budget
+        </a>
+        <a class="btn btn-secondary" href="{{ url_for('subscriptions') }}" style="justify-content: center;">
+            <i class="fas fa-calendar-check"></i> Subscriptions
+        </a>
+    </div>
+</div>
+
+<!-- Budget Monitoring -->
+{% if budget_data %}
+<div class="card" style="margin-bottom: 25px;">
+    <div class="card-header">
+        <h3><i class="fas fa-chart-pie"></i> Budget Monitoring</h3>
+        <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">{{ budget_data|length }}
+            Categories</span>
+    </div>
+
+    {% for b in budget_data %}
+    <div class="progress-container">
+        <div class="progress-label">
+            <strong>{{ b.category }}</strong>
+            <span style="color: #64748b;">₹ {{ "%.2f"|format(b.spent) }} / ₹ {{ "%.2f"|format(b.limit) }}</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill {% if b.status == 'danger' %}danger{% elif b.status == 'warning' %}warning{% else %}success{% endif %}"
+                style="width: min(100%, {{ b.percentage }}%);">
+            </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+            <small style="color: var(--text-muted);">{{ b.percentage }}% Spent</small>
+            {% if b.status == 'danger' %}
+            <span class="badge badge-danger" style="width: fit-content;">
+                <i class="fas fa-exclamation-triangle"></i> Budget Exceeded!
+            </span>
+            {% elif b.status == 'warning' %}
+            <span class="badge badge-warning" style="width: fit-content;">
+                <i class="fas fa-exclamation-circle"></i> Near Limit
+            </span>
+            {% else %}
+            <span class="badge badge-success" style="width: fit-content;">
+                <i class="fas fa-check-circle"></i> On Track
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Charts Section -->
+<h2 style="margin-top: 40px; margin-bottom: 20px; text-align: center; font-weight: 300; letter-spacing: 2px;"><i
+        class="fas fa-analytics"></i> MONTHLY OVERVIEW</h2>
+
+<div class="chart-container">
+    <div class="chart-box" style="animation-delay: 0.6s;">
+        <h3 style="text-align: center; margin-bottom: 20px; font-weight: 500;">
+            <i class="fas fa-chart-bar" style="color: var(--primary);"></i> Income vs Expense
+        </h3>
+        <canvas id="barChart"></canvas>
+    </div>
+
+    <div class="chart-box" style="animation-delay: 0.7s;">
+        <h3 style="text-align: center; margin-bottom: 20px; font-weight: 500;">
+            <i class="fas fa-chart-doughnut" style="color: var(--secondary);"></i> Expense Distribution
+        </h3>
+        <canvas id="pieChart"></canvas>
+    </div>
+</div>
+
+<!-- Recent Transactions Table -->
+{% if recent_expenses %}
+<div class="card" style="margin-top: 30px; animation: fadeInUp 0.6s ease backwards; animation-delay: 0.8s;">
+    <div class="card-header">
+        <h3><i class="fas fa-list" style="color: var(--success);"></i> Recent Transactions</h3>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-calendar"></i> Date</th>
+                    <th><i class="fas fa-tag"></i> Category</th>
+                    <th><i class="fas fa-note-sticky"></i> Note</th>
+                    <th><i class="fas fa-money-bill"></i> Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in recent_expenses %}
+                <tr>
+                    <td>{{ expense.expense_date.strftime('%d %b %Y') }}</td>
+                    <td>
+                        <span class="badge badge-info">{{ expense.category }}</span>
+                    </td>
+                    <td>{{ expense.note }}</td>
+                    <td style="color: #ef4444; font-weight: 600;">- ₹ {{ "%.2f"|format(expense.amount) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Financial Insights -->
+<div class="insight-container"
+    style="margin-top: 30px; animation: fadeInUp 0.6s ease backwards; animation-delay: 0.9s;">
+    <h3><i class="fas fa-lightbulb"
+            style="color: var(--warning); filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.5));"></i> Financial Insights
+    </h3>
+
+    {% if score >= 80 %}
+    <div class="insight-box good">
+        <i class="fas fa-smile"></i>
+        <span>Excellent financial health! Keep maintaining your spending discipline.</span>
+    </div>
+    {% elif score >= 60 %}
+    <div class="insight-box warning">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>Good progress! Try to increase your savings rate.</span>
+    </div>
+    {% else %}
+    <div class="insight-box danger">
+        <i class="fas fa-triangle-exclamation"></i>
+        <span>Consider reviewing your spending patterns and creating a budget.</span>
+    </div>
+    {% endif %}
+
+    {% if savings > 0 %}
+    <div class="insight-box good">
+        <i class="fas fa-check-circle"></i>
+        <span>Great! You're saving ₹ {{ "%.2f"|format(savings) }} this month.</span>
+    </div>
+    {% else %}
+    <div class="insight-box danger">
+        <i class="fas fa-info-circle"></i>
+        <span>Your expenses exceed income. Review your spending.</span>
+    </div>
+    {% endif %}
+</div>
+
+<!-- SMART INSIGHTS SECTION -->
+<div class="insight-container" style="animation: fadeInUp 0.6s ease backwards; animation-delay: 1.0s;">
+    <h2>Smart Insights</h2>
+
+    {% for insight in insights %}
+    <div class="insight-box {{ insight.type }}">
+        {{ insight.message }}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ===== EXPENSE TABLE ===== -->
+<div class="card" style="margin-top: 30px; animation: fadeInUp 0.6s ease backwards; animation-delay: 1.1s;">
+    <div class="card-header">
+        <h3><i class="fas fa-history" style="color: var(--primary);"></i> Full Expense History</h3>
+    </div>
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Note</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in expenses %}
+                <tr>
+                    <td style="color: #f87171; font-weight: 600;">₹ {{ e.amount }}</td>
+                    <td><span class="badge badge-info">{{ e.category }}</span></td>
+                    <td>{{ e.note }}</td>
+                    <td>{{ e.expense_date }}</td>
+                    <td>
+                        <a class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;"
+                            href="{{ url_for('edit_expense', id=e.id) }}"><i class="fas fa-edit"></i> Edit</a>
+                        <form action="{{ url_for('delete_expense', id=e.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-secondary"
+                                style="padding: 6px 12px; font-size: 12px;"><i class="fas fa-trash"></i> Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+<footer>
+    <p style="text-align:center; 
+          font-size: 14px; 
+          color: var(--text-muted);
+          margin-bottom: 20px;
+          margin-top: 40px;
+          letter-spacing: 1px;">
+        ExpenseOrbit • Powered by AI • 2026</p>
+</footer>
+
+
+<script>
+    const barLabels = JSON.parse('{{ bar_labels | tojson | safe }}');
+    const barValues = JSON.parse('{{ bar_values | tojson | safe }}');
+    const pieLabels = JSON.parse('{{ pie_labels | tojson | safe }}');
+    const pieValues = JSON.parse('{{ pie_values | tojson | safe }}');
+    const readableMonth = '{{ readable_month }}';
+
+    // Bar Chart
+    const ctxBar = document.getElementById('barChart').getContext('2d');
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: barLabels,
+            datasets: [{
+                label: 'Amount (₹)',
+                data: barValues,
+                backgroundColor: [
+                    'rgba(76, 175, 80, 0.7)',  // Income Green
+                    'rgba(244, 67, 54, 0.7)'   // Expense Red
+                ],
+                borderColor: [
+                    'rgba(76, 175, 80, 1)',
+                    'rgba(244, 67, 54, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: { display: true, text: 'Income vs Expense - ' + readableMonth, color: '#f8fafc' },
+                legend: { labels: { color: '#cbd5e1' } }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: { color: '#cbd5e1' }
+                },
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: { color: '#cbd5e1' }
+                }
+            }
+        }
+    });
+
+    // Pie Chart
+    const ctxPie = document.getElementById('pieChart').getContext('2d');
+
+    // Generate dynamic colors for pie chart
+    const pieColors = pieLabels.map((label, index) => {
+        if (label === 'No Expenses') return '#cccccc';
+        const hue = (index * 137.5) % 360; // Golden angle for distributed colors
+        return `hsl(${hue}, 70%, 60%)`;
+    });
+
+    new Chart(ctxPie, {
+        type: 'doughnut', // using doughnut for a more modern look
+        data: {
+            labels: pieLabels,
+            datasets: [{
+                data: pieValues,
+                backgroundColor: pieColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: { display: true, text: 'Expense Distribution - ' + readableMonth, color: '#f8fafc' },
+                legend: { position: 'right', labels: { color: '#cbd5e1' } }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

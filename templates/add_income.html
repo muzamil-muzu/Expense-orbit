@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1><i class="fas fa-money-bill"></i> Add Income</h1>
+    <p class="page-subtitle">Record a new income transaction</p>
+</div>
+
+<!-- Form Card -->
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <form method="POST">
+        <!-- Source Group -->
+        <div class="form-group">
+            <label for="source"><i class="fas fa-briefcase"></i> Income Source</label>
+            <input type="text" id="source" name="source" placeholder="e.g., Salary, Freelance, Business" 
+                   list="sources" required>
+            <datalist id="sources">
+                <option value="Salary">
+                <option value="Freelance">
+                <option value="Business">
+                <option value="Investment">
+                <option value="Bonus">
+                <option value="Gift">
+                <option value="Other">
+            </datalist>
+        </div>
+
+        <!-- Amount Group -->
+        <div class="form-group">
+            <label for="amount"><i class="fas fa-money-bill"></i> Amount</label>
+            <div style="display: flex; gap: 10px;">
+                <span style="display: flex; align-items: center; padding: 0 14px; background: #f1f5f9; border-radius: 8px 0 0 8px; font-weight: 600; color: #64748b;">₹</span>
+                <input type="number" id="amount" name="amount" placeholder="0.00" step="0.01" required 
+                       style="border-radius: 0 8px 8px 0; flex: 1;">
+            </div>
+        </div>
+
+        <!-- Date Group -->
+        <div class="form-group">
+            <label for="date"><i class="fas fa-calendar"></i> Date</label>
+            <input type="date" id="date" name="date" required>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display: flex; gap: 12px; margin-top: 30px;">
+            <button type="submit" class="btn" style="flex: 1; justify-content: center;">
+                <i class="fas fa-save"></i> Save Income
+            </button>
+            <a href="/" class="btn btn-outline" style="flex: 1; justify-content: center; text-decoration: none;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+
+    <!-- Quick Tips -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+        <h3 style="font-size: 14px; color: #64748b; margin-bottom: 12px;">
+            <i class="fas fa-lightbulb"></i> Quick Tips
+        </h3>
+        <ul style="font-size: 13px; color: #64748b; margin-left: 0; list-style: none; line-height: 1.8;">
+            <li><i class="fas fa-check" style="color: #10b981;"></i> Record all income sources</li>
+            <li><i class="fas fa-check" style="color: #10b981;"></i> Use consistent source names</li>
+            <li><i class="fas fa-check" style="color: #10b981;"></i> Update after receiving payment</li>
+        </ul>
+    </div>
+</div>
+
+{% endblock %}

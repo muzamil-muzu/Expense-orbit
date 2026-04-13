@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 💸 Expense Tracker Pro
 
 A modern, highly dynamic, and professional Expense Tracking Web Application built using Flask, Python, SQLite, Jinja2, and Chart.js.
@@ -122,3 +123,6 @@ BCA Final Year Student
 *   [ ] Dark mode toggle
 *   [ ] Custom user-defined categories
 *   [ ] Cloud database deployment (PostgreSQL)
+=======
+# Expense-orbit
+>>>>>>> facdc92df942703c200e74b4b2529b08e58f13ea

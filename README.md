@@ -1,128 +1,217 @@
+# 🪐 ExpenseOrbit
 
-# 💸 Expense Tracker Pro
+> A modern, AI-powered Personal Finance Management System built with Flask, Python, SQLite, and Chart.js — featuring receipt scanning, predictive analytics, savings goals, and a premium glassmorphism UI.
 
-A modern, highly dynamic, and professional Expense Tracking Web Application built using Flask, Python, SQLite, Jinja2, and Chart.js.
-
-This project allows users to seamlessly manage their personal finances through a premium dashboard, dynamic data visualizations, recurring automatic subscriptions, and professional invoice-style PDF reports.
-
----
-
-## 🚀 Key Features
-
-*   **Premium Interactive Dashboard:** View balances, savings, and financial health scores at a glance.
-*   **Dynamic Data Visualizations:** Real-time, animated bar and doughnut charts powered by Chart.js.
-*   **Recurring Subscriptions:** Automatically track and log fixed monthly costs (e.g., Netflix, Rent) on their billing days.
-*   **Budget & Smart Insights:** Set overall limits and receive AI-like warnings if you approach or exceed your budget.
-*   **Professional PDF Exports:** Download your entire monthly ledger as a beautifully formatted, premium corporate-invoice style PDF.
-*   **Income & Expense Tracking:** Log, edit, and delete daily ad-hoc expenses and income sources.
-*   **Filter Engine:** Instantly pivot your dashboard and charts to view any previous month in history.
-*   **Secure Authentication:** Encrypted password storage using Werkzeug.
+**BCA Final Year Project** | Built by **Muzamil & Vikhil**
 
 ---
 
-## 🛠 Tech Stack
+## ✨ Key Features
 
-*   **Backend:** Python 3, Flask
-*   **Database:** SQLite, Flask-SQLAlchemy
-*   **Frontend:** HTML5, CSS3, Jinja2 Templates
-*   **Interactive Charts:** Chart.js (Javascript)
-*   **PDF Generation:** ReportLab, Matplotlib
+### 💰 Core Financial Tracking
+- **Income & Expense Management** — Log, edit, and delete daily transactions with custom categories
+- **Recurring Subscriptions** — Automatically track and auto-log fixed monthly costs (Netflix, Rent, etc.) on their billing days
+- **Budget Monitoring** — Set overall spending limits with real-time progress bars and color-coded warnings (Safe / Warning / Danger)
+- **Financial Health Score** — Dynamic score out of 100 based on your savings-to-income ratio
+
+### 🤖 AI & Smart Features
+- **AI Receipt Scanner (OCR)** — Upload a photo of any receipt and the system automatically extracts the amount, date, and merchant name using Tesseract OCR + regex heuristics
+- **Predictive Cash Flow Forecasting** — A mathematical model analyzes your daily spending patterns and projects your total expenditure by month-end, visualized as a forecast line chart
+- **Smart Insights Engine** — Automated financial advice based on savings ratios, budget utilization, and spending patterns
+- **SMS Auto-Parser** — Paste a bank SMS and the system auto-detects the transaction amount and date
+
+### 📊 Data Visualization
+- **Income vs Expense Bar Chart** — Side-by-side comparison powered by Chart.js
+- **Expense Distribution Doughnut Chart** — Category-wise breakdown with dynamic golden-angle colors
+- **Predictive Forecast Line Chart** — Actual cumulative spend (red) vs AI projection (dotted blue)
+
+### 🎯 Savings Goals (Funding Pots)
+- Create custom savings goals with target amounts, deadlines, and custom colors
+- Visual progress bars with animated CSS fill
+- Inline "Add Funds" functionality with "REACHED" status badges
+
+### 🏷️ Custom Categories
+- User-defined expense and income categories with icons and hex colors
+- Auto-seeded default categories for new users
+- Dynamic dropdowns across all forms (Add Expense, Add Income, Subscriptions)
+
+### 📱 Progressive Web App (PWA)
+- Installable on mobile devices via "Add to Home Screen"
+- Service Worker for offline caching
+- Web App Manifest with theme colors and icons
+
+### 🌓 Theme System
+- **Dark Mode** (Midnight Aurora) — Default premium dark theme
+- **Light Mode** — Clean, minimal white theme
+- Persisted via `localStorage` with zero-flash loading
+
+### 📄 PDF Report Generation
+- One-click downloadable monthly financial reports
+- Corporate invoice-style formatting using ReportLab
+- Includes embedded pie charts via Matplotlib
+
+---
+
+## 🎨 Design System: "Midnight Aurora"
+
+| Element | Specification |
+|---|---|
+| **Font** | Plus Jakarta Sans (Google Fonts) |
+| **Background** | True black `#05050A` with subtle aurora mesh gradient |
+| **Cards** | Frosted glass with `backdrop-filter: blur(24px)` |
+| **Buttons** | Pill-shaped (`border-radius: 50px`) with gradient fills |
+| **Borders** | Ultra-thin `1px solid rgba(255,255,255,0.05)` |
+| **Accent Colors** | Electric Blue `#4FACFE` → Cyan `#00F2FE` |
+| **Secondary** | Lavender `#A18CD1` |
+| **Animations** | `fadeInUp`, aurora drift, smooth hover elevations |
+
+### Responsive Breakpoints
+
+| Breakpoint | Target | Behavior |
+|---|---|---|
+| **993px+** | Desktop | Full layout, side-by-side charts |
+| **641–992px** | Tablet | Hamburger menu, adjusted spacing |
+| **≤640px** | Mobile | Edge-to-edge layout, 2-col stat cards, full-width buttons |
+| **≤380px** | Small phone | Single-column cards |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Backend** | Python 3, Flask |
+| **Database** | SQLite, Flask-SQLAlchemy |
+| **Frontend** | HTML5, CSS3, Jinja2, JavaScript |
+| **Charts** | Chart.js |
+| **OCR** | Tesseract, pytesseract, Pillow |
+| **PDF** | ReportLab, Matplotlib |
+| **PWA** | Service Worker, Web App Manifest |
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-Expense-tracker-pro/
+ExpenseOrbit/
 │
-├── app.py                  # Main application routing and business logic
-├── expenses.db             # SQLite database (auto-generated)
-├── requirements.txt        # Python dependencies
+├── app.py                      # Main application (routes, models, logic)
+├── requirements.txt            # Python dependencies
+├── expenses.db                 # SQLite database (auto-generated)
+├── .gitignore                  # Git exclusions
 │
-├── templates/              # Jinja2 HTML Templates
-│   ├── base.html           # Global layout and navigation
-│   ├── dashboard.html      # Main financial dashboard and charts
-│   ├── subscriptions.html  # Recurring subscriptions management
-│   ├── login.html
-│   ├── register.html
-│   ├── add_expense.html
-│   ├── add_income.html
-│   ├── add_subscription.html
-│   ├── set_budget.html
-│   └── edit_expense.html
+├── static/                     # Frontend assets
+│   ├── style.css               # Midnight Aurora design system
+│   ├── logo.png                # App logo
+│   ├── favicon.png             # Browser favicon
+│   ├── manifest.json           # PWA manifest
+│   └── sw.js                   # Service Worker (offline caching)
 │
-└── static/                 # CSS & Assets
-    ├── style.css
-    └── logo.png
+└── templates/                  # Jinja2 HTML templates
+    ├── base.html               # Global layout, navbar, hamburger menu
+    ├── login.html              # Premium dark login page
+    ├── register.html           # Premium dark registration page
+    ├── dashboard.html          # Main dashboard with charts & insights
+    ├── add_expense.html        # Add expense form + AI receipt scanner
+    ├── edit_expense.html       # Edit existing expense
+    ├── add_income.html         # Add income form
+    ├── add_auto_expense.html   # SMS auto-parser
+    ├── add_subscription.html   # Add recurring subscription
+    ├── subscriptions.html      # Manage subscriptions
+    ├── set_budget.html         # Set monthly budget
+    ├── categories.html         # Custom category management
+    ├── goals.html              # Savings goals / funding pots
+    └── report.html             # Monthly report viewer
 ```
 
 ---
 
-## ⚙️ Installation & Run Locally
+## ⚙️ Installation & Setup
+
+### Prerequisites
+- Python 3.8+
+- pip (Python package manager)
+- Tesseract OCR (for receipt scanning feature)
 
 ### Step 1 — Clone the repository
 
 ```bash
-git clone https://github.com/username/Expense-tracker-pro.git  
-cd Expense-tracker-pro
+git clone https://github.com/username/ExpenseOrbit.git
+cd ExpenseOrbit
 ```
 
-### Step 2 — Install dependencies
+### Step 2 — Install Python dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 3 — Run the application
+### Step 3 — Install Tesseract OCR (optional, for receipt scanning)
+
+Download and install from: [Tesseract Windows Installer](https://github.com/UB-Mannheim/tesseract/wiki)
+
+Default expected path: `C:\Program Files\Tesseract-OCR\tesseract.exe`
+
+### Step 4 — Run the application
 
 ```bash
 python app.py
 ```
 
-Open your browser and navigate to: `http://127.0.0.1:5000`
+Open your browser and navigate to: **http://127.0.0.1:5000**
 
 ---
 
-## 🔑 Default Workflow
+## 🔑 User Workflow
 
-1.  Register a new secure account.
-2.  Add your monthly Income.
-3.  Set your ideal Monthly Budget.
-4.  Navigate to Subscriptions and add your fixed costs (Rent, Gym, Software).
-5.  Add daily ad-hoc Expenses as they occur.
-6.  Monitor your dynamic Dashboard charts to ensure you stay under budget.
-7.  At the end of the month, generate and download your PDF Report.
-
----
-
-## 🎯 Purpose of Project
-
-This project is developed as a BCA Final Year Project to demonstrate:
-
-*   Full-Stack Web Development with Flask
-*   Relational Database Modeling (SQLAlchemy)
-*   User Authentication & Session Management
-*   Javascript-driven Data Visualization (Chart.js)
-*   Dynamic Document Generation (ReportLab)
-*   Professional UI/UX Design aesthetics 
+1. **Register** a new account with name, email, and password
+2. **Add Income** — Log your monthly salary or earnings
+3. **Set Budget** — Define your ideal monthly spending limit
+4. **Add Subscriptions** — Track fixed costs like rent, gym, streaming services
+5. **Log Expenses** — Add daily expenses manually or scan receipts with AI
+6. **Manage Categories** — Create custom categories with icons and colors
+7. **Set Savings Goals** — Create funding pots and track progress
+8. **Monitor Dashboard** — View charts, forecasts, insights, and financial score
+9. **Download Report** — Generate a professional PDF at month-end
 
 ---
 
-## 👨‍💻 Author
+## 🎯 Academic Purpose
 
-**Muzamil & Vikhil**  
-BCA Final Year Student
+This project is developed as a **BCA Final Year Project** to demonstrate proficiency in:
+
+- Full-Stack Web Development with Flask & Python
+- Relational Database Modeling (SQLAlchemy ORM)
+- User Authentication & Session Management
+- JavaScript-driven Data Visualization (Chart.js)
+- Artificial Intelligence Integration (OCR, Predictive Analytics)
+- Progressive Web App Architecture
+- Responsive Mobile-First UI/UX Design
+- Dynamic Document Generation (ReportLab)
 
 ---
 
-## 📌 Future Improvements
+## 👨‍💻 Authors
 
-*   [x] Export report as PDF
-*   [x] Monthly/Yearly history filters
-*   [x] Automated Recurring Subscriptions
-*   [ ] Dark mode toggle
-*   [ ] Custom user-defined categories
-*   [ ] Cloud database deployment (PostgreSQL)
-=======
-# Expense-orbit
->>>>>>> facdc92df942703c200e74b4b2529b08e58f13ea
+**Muzamil & Vikhil**
+BCA Final Year Students
+
+---
+
+## 📌 Feature Roadmap
+
+- [x] Premium Dashboard with Financial Score
+- [x] Dynamic Chart.js Visualizations
+- [x] Recurring Subscription Auto-Processing
+- [x] Professional PDF Report Export
+- [x] Dark / Light Theme Toggle
+- [x] Progressive Web App (PWA)
+- [x] Custom User-Defined Categories
+- [x] Savings Goals / Funding Pots
+- [x] AI Receipt Scanning (Tesseract OCR)
+- [x] Predictive Cash Flow Forecasting
+- [x] Mobile Responsive Design (Hamburger Menu)
+- [x] Premium "Midnight Aurora" UI Redesign
+- [ ] Cloud Database Deployment (PostgreSQL)
+- [ ] CSV Bank Statement Bulk Import
+- [ ] Gamification & Achievement Badges

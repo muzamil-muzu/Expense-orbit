@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+<div class="page-header" style="margin-bottom: 30px;">
+    <h1><i class="fas fa-bullseye"></i> Savings Goals</h1>
+    <p class="page-subtitle">Allocate your funds into specific mental pots.</p>
+</div>
+
+<!-- Add Goal Form -->
+<div class="card" style="margin-bottom: 40px; border-top: 4px solid var(--info);">
+    <h3><i class="fas fa-plus"></i> Create New Goal</h3>
+    <form method="POST" action="/add_goal" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; margin-top: 20px;">
+        
+        <div class="form-group" style="margin-bottom: 0; flex: 2; min-width: 200px;">
+            <label>Goal Name</label>
+            <input type="text" name="name" required placeholder="e.g. Vacation, New Car">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+            <label>Target Amount</label>
+            <div style="display: flex;">
+                <span style="display: flex; align-items: center; padding: 0 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-right: none; border-radius: 8px 0 0 8px; color: var(--text-muted);">₹</span>
+                <input type="number" name="target_amount" step="0.01" required placeholder="0.00" style="border-radius: 0 8px 8px 0;">
+            </div>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+            <label>Deadline (Optional)</label>
+            <input type="date" name="deadline">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0; flex: 0.5; min-width: 80px;">
+            <label>Color</label>
+            <input type="color" name="color" value="#0ea5e9" style="padding: 2px; height: 50px; cursor: pointer; width: 100%;">
+        </div>
+
+        <button type="submit" class="btn btn-secondary" style="height: 50px;"><i class="fas fa-flag-checkered"></i> Start Goal</button>
+    </form>
+</div>
+
+<!-- Existing Goals Grid -->
+<h3 style="margin-bottom: 20px;"><i class="fas fa-piggy-bank"></i> Your Funding Pots</h3>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+    {% for goal in goals %}
+    <div class="card" style="padding: 24px; position: relative;">
+        <!-- Delete Button -->
+        <form method="POST" action="/delete_goal/{{ goal.id }}" style="position: absolute; top: 15px; right: 15px; margin: 0;" onsubmit="return confirm('Delete this savings goal?');">
+            <button type="submit" title="Delete Goal" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </form>
+
+        <h4 style="margin: 0; font-size: 18px; color: var(--text-primary); margin-bottom: 5px;">{{ goal.name }}</h4>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+            Target: ₹{{ "{:,.2f}".format(goal.target_amount) }}
+            {% if goal.deadline %} | By: {{ goal.deadline.strftime('%d %b %Y') }}{% endif %}
+        </p>
+
+        <!-- Progress Bar -->
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600;">
+            <span style="color: {{ goal.color }};">₹{{ "{:,.2f}".format(goal.current_amount) }}</span>
+            <span style="color: var(--text-secondary);">{{ goal.progress_pct }}%</span>
+        </div>
+        <div style="height: 12px; background: rgba(15, 23, 42, 0.4); border-radius: 6px; overflow: hidden; margin-bottom: 20px; border: 1px solid var(--border-color);">
+            <div style="height: 100%; background: {{ goal.color }}; width: {{ goal.progress_pct }}%; border-radius: 6px; transition: width 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 0 10px {{ goal.color }}80;"></div>
+        </div>
+
+        <!-- Add Funds Form -->
+        <form method="POST" action="/fund_goal/{{ goal.id }}" style="display: flex; gap: 10px;">
+            <div style="display: flex; flex: 1;">
+                <span style="display: flex; align-items: center; padding: 0 10px; background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color); border-right: none; border-radius: 6px 0 0 6px; color: var(--text-muted); font-size: 13px;">₹</span>
+                <input type="number" name="amount" step="0.01" required placeholder="0.00" style="border-radius: 0 6px 6px 0; padding: 10px; font-size: 14px; flex: 1;">
+            </div>
+            <button type="submit" style="background: {{ goal.color }}; color: white; border: none; padding: 0 15px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 5px; transition: opacity 0.2s;">
+                <i class="fas fa-plus"></i> Add
+            </button>
+        </form>
+        {% if goal.progress_pct >= 100 %}
+            <div style="position: absolute; top: 15px; right: 45px; background: var(--success); color: white; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 12px;">✅ REACHED</div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px dashed var(--border-color);">
+        <i class="fas fa-seedling" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 15px;"></i>
+        <p style="color: var(--text-secondary); font-size: 16px;">No savings goals set. Start a new pot above!</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Quick CSS fix for inline form elements -->
+<style>
+    input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch {
+        border: none;
+        border-radius: 4px;
+    }
+    form button[type="submit"].btn::before {
+        opacity: 0;
+    }
+    .card button[type="submit"]:hover {
+        opacity: 0.85;
+    }
+</style>
+
+{% endblock %}

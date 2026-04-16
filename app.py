@@ -1,4 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session, make_response, send_from_directory, jsonify
+import pytesseract
+from PIL import Image
+import sys
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
@@ -20,6 +23,9 @@ import re
 
 app = Flask(__name__)
 app.secret_key = "secret_key"
+
+if sys.platform == 'win32':
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'expenses.db')
@@ -64,8 +70,51 @@ class Subscription(db.Model):
     last_processed_date = db.Column(db.Date, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    type = db.Column(db.String(50)) # 'Expense' or 'Income'
+    icon = db.Column(db.String(50), default="fa-tag")
+    color = db.Column(db.String(20), default="#8b5cf6")
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+class SavingsGoal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    target_amount = db.Column(db.Float)
+    current_amount = db.Column(db.Float, default=0.0)
+    deadline = db.Column(db.Date, nullable=True)
+    color = db.Column(db.String(20), default="#10b981")
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
 with app.app_context():
     db.create_all()
+
+# ================= SEED DEFAULTS =================
+def seed_default_categories(user_id):
+    if Category.query.filter_by(user_id=user_id).count() == 0:
+        default_expenses = [
+            ("Food", "fa-utensils", "#f59e0b"),
+            ("Transport", "fa-bus", "#38bdf8"),
+            ("Entertainment", "fa-film", "#ec4899"),
+            ("Shopping", "fa-bag-shopping", "#8b5cf6"),
+            ("Utilities", "fa-bolt", "#eab308"),
+            ("Healthcare", "fa-notes-medical", "#ef4444"),
+            ("Other", "fa-tag", "#94a3b8")
+        ]
+        default_incomes = [
+            ("Salary", "fa-building-columns", "#10b981"),
+            ("Freelance", "fa-laptop-code", "#3b82f6"),
+            ("Other Income", "fa-wallet", "#64748b")
+        ]
+        
+        for name, icon, color in default_expenses:
+            db.session.add(Category(name=name, type="Expense", icon=icon, color=color, user_id=user_id))
+        
+        for name, icon, color in default_incomes:
+            db.session.add(Category(name=name, type="Income", icon=icon, color=color, user_id=user_id))
+            
+        db.session.commit()
 
 # ================= DATE PARSER =================
 def parse_date(date_str):
@@ -100,6 +149,8 @@ def register():
         user = User(name=name, email=email, password=password)
         db.session.add(user)
         db.session.commit()
+        
+        seed_default_categories(user.id)
 
         flash("Account created. Login now.", "success")
         return redirect(url_for('login'))
@@ -118,6 +169,7 @@ def login():
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
             session['user_name'] = user.name
+            seed_default_categories(user.id)
             return redirect(url_for('index'))
 
         flash("Invalid credentials", "danger")
@@ -135,6 +187,7 @@ def logout():
 @login_required
 def index():
     user_id = session['user_id']
+    seed_default_categories(user_id)
 
         
 
@@ -279,6 +332,49 @@ def index():
             "message": "You are spending more than you earn this month."
         })
 
+    # ================= FORECASTING (PREDICTIVE AI) =================
+    import calendar
+    _, days_in_month = calendar.monthrange(year, month)
+    forecast_days = list(range(1, days_in_month + 1))
+    
+    daily_totals = {d: 0.0 for d in forecast_days}
+    for e in expenses:
+        if e.expense_date.year == year and e.expense_date.month == month:
+            d = e.expense_date.day
+            daily_totals[d] += e.amount
+            
+    actual_cumulative = []
+    projected_cumulative = []
+    
+    running_total = 0.0
+    current_day = today.day if (today.year == year and today.month == month) else days_in_month
+    
+    for d in forecast_days:
+        running_total += daily_totals[d]
+        if d <= current_day:
+            actual_cumulative.append(running_total)
+            projected_cumulative.append(None)
+        else:
+            actual_cumulative.append(None)
+            
+    # Link the projection to the last known point
+    if current_day > 0 and current_day < days_in_month:
+        projected_cumulative[current_day - 1] = actual_cumulative[current_day - 1]
+    
+    daily_rate = actual_cumulative[current_day - 1] / current_day if current_day > 0 else 0
+    projected_total = daily_rate * days_in_month
+    
+    for d in forecast_days:
+        if d > current_day:
+            project_val = daily_rate * d
+            projected_cumulative.append(round(project_val, 2))
+
+    if current_day < days_in_month:
+        insights.insert(0, {
+            "type": "info",
+            "message": f"📈 AI Forecast: Moving at your current daily rate, you are projected to spend ₹{projected_total:,.2f} by the end of this month."
+        })
+
     # ================= CHART DATA PREPARATION =================
     # 1. Bar Chart Data (Income vs Expense)
     bar_labels = ['Income', 'Expense']
@@ -306,7 +402,10 @@ def index():
         bar_labels=bar_labels,
         bar_values=bar_values,
         pie_labels=pie_labels,
-        pie_values=pie_values
+        pie_values=pie_values,
+        forecast_days=forecast_days,
+        actual_cumulative=actual_cumulative,
+        projected_cumulative=projected_cumulative
     )
 
 # ================= SMART SMS PARSER =================
@@ -393,7 +492,8 @@ def add_expense():
         db.session.commit()
         return redirect(url_for('index'))
 
-    return render_template('add_expense.html')
+    categories = Category.query.filter_by(user_id=session['user_id'], type='Expense').all()
+    return render_template('add_expense.html', categories=categories)
 
 # ================= EDIT EXPENSE =================
 @app.route('/edit/<int:id>', methods=['GET','POST'])
@@ -410,7 +510,8 @@ def edit_expense(id):
         flash("Expense updated successfully", "success")
         return redirect(url_for('index'))
 
-    return render_template('edit_expense.html', expense=expense)
+    categories = Category.query.filter_by(user_id=session['user_id'], type='Expense').all()
+    return render_template('edit_expense.html', expense=expense, categories=categories)
 
 # ================= ADD INCOME =================
 @app.route('/add_income', methods=['GET','POST'])
@@ -428,7 +529,8 @@ def add_income():
         flash("Income added successfully", "success")
         return redirect(url_for('index'))
 
-    return render_template('add_income.html')
+    categories = Category.query.filter_by(user_id=session['user_id'], type='Income').all()    
+    return render_template('add_income.html', categories=categories)
 
 # ================= SET BUDGET =================
 @app.route('/set_budget', methods=['GET','POST'])
@@ -749,7 +851,9 @@ def add_subscription():
         db.session.commit()
         flash("Subscription added successfully", "success")
         return redirect(url_for('subscriptions'))
-    return render_template('add_subscription.html')
+        
+    categories = Category.query.filter_by(user_id=session['user_id'], type='Expense').all()
+    return render_template('add_subscription.html', categories=categories)
 
 @app.route('/delete_subscription/<int:id>', methods=['POST'])
 @login_required
@@ -764,7 +868,154 @@ def delete_subscription(id):
     flash("Subscription cancelled", "success")
     return redirect(url_for('subscriptions'))
 
+# ================= CATEGORIES ROUTES =================
+@app.route('/categories')
+@login_required
+def view_categories():
+    user_id = session['user_id']
+    user_categories = Category.query.filter_by(user_id=user_id).all()
+    return render_template('categories.html', categories=user_categories)
+
+@app.route('/add_category', methods=['POST'])
+@login_required
+def add_category():
+    name = request.form['name']
+    type = request.form['type']
+    icon = request.form.get('icon', 'fa-tag')
+    color = request.form.get('color', '#8b5cf6')
+    
+    new_cat = Category(name=name, type=type, icon=icon, color=color, user_id=session['user_id'])
+    db.session.add(new_cat)
+    db.session.commit()
+    flash(f"{name} category added!", "success")
+    return redirect(url_for('view_categories'))
+
+@app.route('/delete_category/<int:id>', methods=['POST'])
+@login_required
+def delete_category(id):
+    cat = Category.query.get_or_404(id)
+    if cat.user_id != session['user_id']:
+        return redirect(url_for('view_categories'))
+    
+    db.session.delete(cat)
+    db.session.commit()
+    flash("Category deleted.", "info")
+    return redirect(url_for('view_categories'))
+
 # ================= AUTO EXPENSES ROUTES =================
+
+# ================= SAVINGS GOALS =================
+@app.route('/goals')
+@login_required
+def goals():
+    user_id = session['user_id']
+    user_goals = SavingsGoal.query.filter_by(user_id=user_id).all()
+    # Adding a dynamic progress percentage to each goal before sending to template
+    for goal in user_goals:
+        if goal.target_amount > 0:
+            pct = (goal.current_amount / goal.target_amount) * 100
+            goal.progress_pct = min(100, round(pct, 1))
+        else:
+            goal.progress_pct = 0
+            
+    return render_template('goals.html', goals=user_goals)
+
+@app.route('/add_goal', methods=['POST'])
+@login_required
+def add_goal():
+    name = request.form['name']
+    target = float(request.form['target_amount'])
+    color = request.form.get('color', '#10b981')
+    deadline_str = request.form.get('deadline')
+    
+    deadline = parse_date(deadline_str).date() if deadline_str else None
+    
+    new_goal = SavingsGoal(name=name, target_amount=target, color=color, deadline=deadline, user_id=session['user_id'])
+    db.session.add(new_goal)
+    db.session.commit()
+    flash(f"Goal '{name}' created successfully!", "success")
+    return redirect(url_for('goals'))
+
+@app.route('/fund_goal/<int:id>', methods=['POST'])
+@login_required
+def fund_goal(id):
+    goal = SavingsGoal.query.get_or_404(id)
+    if goal.user_id != session['user_id']:
+        return redirect(url_for('goals'))
+    
+    deposit = float(request.form['amount'])
+    goal.current_amount += deposit
+    
+    db.session.commit()
+    flash(f"Added ₹{deposit:,.2f} to {goal.name}!", "success")
+    return redirect(url_for('goals'))
+
+@app.route('/delete_goal/<int:id>', methods=['POST'])
+@login_required
+def delete_goal(id):
+    goal = SavingsGoal.query.get_or_404(id)
+    if goal.user_id != session['user_id']:
+        return redirect(url_for('goals'))
+    
+    db.session.delete(goal)
+    db.session.commit()
+    flash("Goal deleted.", "info")
+    return redirect(url_for('goals'))
+
+# ================= RECEIPT SCANNING (OCR) =================
+@app.route('/scan_receipt', methods=['POST'])
+@login_required
+def scan_receipt():
+    if 'receipt' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+        
+    file = request.files['receipt']
+    if file.filename == '':
+        return jsonify({"error": "Empty filename"}), 400
+        
+    try:
+        image = Image.open(file)
+        text = pytesseract.image_to_string(image)
+        
+        amount = None
+        date_str = None
+        
+        # Heuristics for Amount
+        amount_match = re.search(r'(?:total|amount|due|amount due|sum)[\s:$-]*([\d,]+\.\d{2})', text, re.IGNORECASE)
+        if amount_match:
+            amount = float(amount_match.group(1).replace(',', ''))
+            
+        # Heuristics for Date
+        date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})', text)
+        if date_match:
+            try:
+                date_str = parse_date(date_match.group(1)).strftime('%Y-%m-%d')
+            except:
+                pass
+                
+        # First non-empty line as highly likely merchant
+        lines = [line.strip() for line in text.split('\n') if len(line.strip()) > 2]
+        merchant = lines[0] if lines else "Unknown Vendor"
+        merchant = re.sub(r'[^A-Za-z0-9\s&]', '', merchant)
+        
+        return jsonify({
+            "success": True,
+            "amount": amount,
+            "date": date_str,
+            "merchant": merchant, 
+            "note": f"Scanned receipt from {merchant}"
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e), "message": "OCR failed. Ensure Tesseract is installed."}), 500
+
+# ================= SERVICE WORKER =================
+@app.route('/sw.js')
+def sw():
+    response = make_response(send_from_directory('static', 'sw.js'))
+    response.headers['Content-Type'] = 'application/javascript'
+    response.headers['Service-Worker-Allowed'] = '/'
+    return response
 
 # ================= RUN =================
 if __name__ == '__main__':

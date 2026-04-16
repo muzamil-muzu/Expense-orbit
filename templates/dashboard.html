@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 
@@ -59,21 +58,20 @@
                 style="color: var(--warning); filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.5));"></i> Quick Actions
         </h3>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
-        <a class="btn btn-primary" href="{{ url_for('add_expense') }}" style="justify-content: center;">
+    <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+        <a class="btn btn-primary" href="{{ url_for('add_expense') }}">
             <i class="fas fa-plus-circle"></i> Add Expense
         </a>
-        <a class="btn btn-secondary" href="{{ url_for('add_income') }}" style="justify-content: center;">
+        <a class="btn btn-secondary" href="{{ url_for('add_income') }}">
             <i class="fas fa-money-bill"></i> Add Income
         </a>
-        <a class="btn" href="{{ url_for('add_auto_expense') }}"
-            style="justify-content: center; background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+        <a class="btn" href="{{ url_for('add_auto_expense') }}" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
             <i class="fas fa-sms"></i> Auto-Add (SMS)
         </a>
-        <a class="btn btn-primary" href="{{ url_for('set_budget') }}" style="justify-content: center;">
+        <a class="btn btn-primary" href="{{ url_for('set_budget') }}">
             <i class="fas fa-bullseye"></i> Set Budget
         </a>
-        <a class="btn btn-secondary" href="{{ url_for('subscriptions') }}" style="justify-content: center;">
+        <a class="btn btn-secondary" href="{{ url_for('subscriptions') }}">
             <i class="fas fa-calendar-check"></i> Subscriptions
         </a>
     </div>
@@ -126,17 +124,31 @@
 
 <div class="chart-container">
     <div class="chart-box" style="animation-delay: 0.6s;">
-        <h3 style="text-align: center; margin-bottom: 20px; font-weight: 500;">
+        <h3 style="text-align: center; margin-bottom: 10px; font-weight: 500;">
             <i class="fas fa-chart-bar" style="color: var(--primary);"></i> Income vs Expense
         </h3>
-        <canvas id="barChart"></canvas>
+        <div class="chart-canvas-wrap">
+            <canvas id="barChart"></canvas>
+        </div>
     </div>
 
     <div class="chart-box" style="animation-delay: 0.7s;">
-        <h3 style="text-align: center; margin-bottom: 20px; font-weight: 500;">
+        <h3 style="text-align: center; margin-bottom: 10px; font-weight: 500;">
             <i class="fas fa-chart-doughnut" style="color: var(--secondary);"></i> Expense Distribution
         </h3>
-        <canvas id="pieChart"></canvas>
+        <div class="chart-canvas-wrap">
+            <canvas id="pieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Predictive Analytics Forecast Chart -->
+<div class="card" style="margin-top: 25px; margin-bottom: 25px; animation: fadeInUp 0.6s ease backwards; animation-delay: 0.75s; border-top: 3px solid var(--info);">
+    <h3 style="text-align: center; margin-bottom: 20px; font-weight: 500;">
+        <i class="fas fa-robot" style="color: var(--info);"></i> Predictive Core Forecast
+    </h3>
+    <div style="position: relative; height: 350px; width: 100%;">
+        <canvas id="forecastChart"></canvas>
     </div>
 </div>
 
@@ -275,6 +287,12 @@
     const barValues = JSON.parse('{{ bar_values | tojson | safe }}');
     const pieLabels = JSON.parse('{{ pie_labels | tojson | safe }}');
     const pieValues = JSON.parse('{{ pie_values | tojson | safe }}');
+    
+    // Safety fallback for forecast vars in case they're undefined
+    const forecastDays = JSON.parse('{{ forecast_days|default("[]") | tojson | safe }}');
+    const actualCumulative = JSON.parse('{{ actual_cumulative|default("[]") | tojson | safe }}');
+    const projectedCumulative = JSON.parse('{{ projected_cumulative|default("[]") | tojson | safe }}');
+    
     const readableMonth = '{{ readable_month }}';
 
     // Bar Chart
@@ -299,6 +317,7 @@
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 title: { display: true, text: 'Income vs Expense - ' + readableMonth, color: '#f8fafc' },
                 legend: { labels: { color: '#cbd5e1' } }
@@ -339,12 +358,76 @@
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 title: { display: true, text: 'Expense Distribution - ' + readableMonth, color: '#f8fafc' },
                 legend: { position: 'right', labels: { color: '#cbd5e1' } }
             }
         }
     });
+
+    // Forecast Line Chart
+    if (forecastDays && forecastDays.length > 0) {
+        const ctxForecast = document.getElementById('forecastChart').getContext('2d');
+        new Chart(ctxForecast, {
+            type: 'line',
+            data: {
+                labels: forecastDays,
+                datasets: [
+                    {
+                        label: 'Actual Spend',
+                        data: actualCumulative,
+                        borderColor: 'rgba(244, 67, 54, 1)',
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'AI Projection',
+                        data: projectedCumulative,
+                        borderColor: 'rgba(56, 189, 248, 1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#cbd5e1' } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += '₹ ' + context.parsed.y.toLocaleString('en-IN', {minimumFractionDigits: 2});
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#cbd5e1' }
+                    },
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#cbd5e1' },
+                        title: { display: true, text: 'Day of the Month', color: '#64748b' }
+                    }
+                }
+            }
+        });
+    }
 </script>
 
 {% endblock %}

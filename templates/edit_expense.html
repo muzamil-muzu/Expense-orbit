@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
 
 
@@ -17,9 +16,9 @@
         <!-- Amount Group -->
         <div class="form-group">
             <label for="amount"><i class="fas fa-money-bill"></i> Amount</label>
-            <div style="display: flex; gap: 10px;">
-                <span style="display: flex; align-items: center; padding: 0 14px; background: #f1f5f9; border-radius: 8px 0 0 8px; font-weight: 600; color: #64748b;">₹</span>
-                <input type="number" id="amount" name="amount" placeholder="0.00" step="0.01" required 
+            <div style="display: flex;">
+                <span style="display: flex; align-items: center; padding: 0 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-right: none; border-radius: 8px 0 0 8px; font-weight: 600; color: var(--text-muted);">₹</span>
+                <input type="number" id="amount" name="amount" placeholder="0.00" step="0.01" required value="{{ expense.amount }}"
                        style="border-radius: 0 8px 8px 0; flex: 1;">
             </div>
         </div>
@@ -27,30 +26,24 @@
         <!-- Category Group -->
         <div class="form-group">
             <label for="category"><i class="fas fa-tag"></i> Category</label>
-            <input type="text" id="category" name="category" placeholder="e.g., Food, Transport, Entertainment" 
-                   list="categories" required>
-            <datalist id="categories">
-                <option value="Food">
-                <option value="Transport">
-                <option value="Entertainment">
-                <option value="Shopping">
-                <option value="Utilities">
-                <option value="Healthcare">
-                <option value="Education">
-                <option value="Other">
-            </datalist>
+            <select id="category" name="category" required>
+                <option value="" disabled>-- Select a Category --</option>
+                {% for cat in categories %}
+                <option value="{{ cat.name }}" {% if expense.category == cat.name %}selected{% endif %}>&#xf02b; &nbsp; {{ cat.name }}</option>
+                {% endfor %}
+            </select>
         </div>
 
         <!-- Note Group -->
         <div class="form-group">
             <label for="note"><i class="fas fa-note-sticky"></i> Note / Description</label>
-            <input type="text" id="note" name="note" placeholder="Add a note (optional)">
+            <input type="text" id="note" name="note" placeholder="Add a note (optional)" value="{{ expense.note }}">
         </div>
 
         <!-- Date Group -->
         <div class="form-group">
             <label for="date"><i class="fas fa-calendar"></i> Date</label>
-            <input type="date" id="date" name="date" required>
+            <input type="date" id="date" name="date" required value="{{ expense.expense_date.strftime('%Y-%m-%d') }}">
         </div>
 
         <!-- Buttons -->

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | Expense Tracker Pro</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * {
@@ -223,7 +224,7 @@
         <!-- Header -->
         <div class="register-header">
             <div class="register-logo">
-                <i class="fas fa-user-plus"></i>
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="ExpenseOrbit Logo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
             </div>
             <h1>Create Account</h1>
             <p>Start managing your finances today</p>

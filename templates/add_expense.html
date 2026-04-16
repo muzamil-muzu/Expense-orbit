@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
 
 
@@ -13,6 +12,18 @@
 
 <!-- Form Card -->
 <div class="card" style="max-width: 600px; margin: 0 auto;">
+    <!-- AI Receipt Scanner -->
+    <div style="background: rgba(139, 92, 246, 0.1); border: 1px dashed var(--primary); padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
+        <h4 style="color: var(--primary); margin-bottom: 10px;"><i class="fas fa-magic"></i> AI Receipt Scanner</h4>
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Upload a receipt and let AI extract the amount and date for you!</p>
+        
+        <input type="file" id="receipt-upload" accept="image/*" style="display: none;">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('receipt-upload').click();" id="upload-btn">
+            <i class="fas fa-camera"></i> Upload Receipt
+        </button>
+        <span id="scan-status" style="display: block; margin-top: 10px; font-size: 13px; font-weight: 600;"></span>
+    </div>
+
     <form method="POST">
         <!-- Amount Group -->
         <div class="form-group">
@@ -27,18 +38,12 @@
         <!-- Category Group -->
         <div class="form-group">
             <label for="category"><i class="fas fa-tag"></i> Category</label>
-            <input type="text" id="category" name="category" placeholder="e.g., Food, Transport, Entertainment" 
-                   list="categories" required>
-            <datalist id="categories">
-                <option value="Food">
-                <option value="Transport">
-                <option value="Entertainment">
-                <option value="Shopping">
-                <option value="Utilities">
-                <option value="Healthcare">
-                <option value="Education">
-                <option value="Other">
-            </datalist>
+            <select id="category" name="category" required>
+                <option value="" disabled selected>-- Select a Category --</option>
+                {% for cat in categories %}
+                <option value="{{ cat.name }}">&#xf02b; &nbsp; {{ cat.name }}</option>
+                {% endfor %}
+            </select>
         </div>
 
         <!-- Note Group -->
@@ -76,5 +81,50 @@
         </ul>
     </div>
 </div>
+
+<script>
+    document.getElementById('receipt-upload').addEventListener('change', function(e) {
+        if (e.target.files.length === 0) return;
+        
+        const file = e.target.files[0];
+        const formData = new FormData();
+        formData.append('receipt', file);
+        
+        const statusEl = document.getElementById('scan-status');
+        const uploadBtn = document.getElementById('upload-btn');
+        
+        statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing receipt with AI...';
+        statusEl.style.color = 'var(--info)';
+        uploadBtn.disabled = true;
+        
+        fetch('/scan_receipt', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            uploadBtn.disabled = false;
+            
+            if (data.error) {
+                statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + data.message;
+                statusEl.style.color = 'var(--danger)';
+                return;
+            }
+            
+            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Scan complete! Form auto-filled.';
+            statusEl.style.color = 'var(--success)';
+            
+            if (data.amount) document.getElementById('amount').value = data.amount;
+            if (data.date) document.getElementById('date').value = data.date;
+            if (data.note) document.getElementById('note').value = data.note;
+            
+        })
+        .catch(err => {
+            uploadBtn.disabled = false;
+            statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Connection error.';
+            statusEl.style.color = 'var(--danger)';
+        });
+    });
+</script>
 
 {% endblock %}

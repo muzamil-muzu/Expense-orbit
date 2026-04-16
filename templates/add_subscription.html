@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
 
 
@@ -35,8 +34,8 @@
         <!-- Amount Group -->
         <div class="form-group">
             <label for="amount"><i class="fas fa-money-bill"></i> Monthly Amount</label>
-            <div style="display: flex; gap: 10px;">
-                <span style="display: flex; align-items: center; padding: 0 14px; background: #f1f5f9; border-radius: 8px 0 0 8px; font-weight: 600; color: #64748b;">₹</span>
+            <div style="display: flex;">
+                <span style="display: flex; align-items: center; padding: 0 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-right: none; border-radius: 8px 0 0 8px; font-weight: 600; color: var(--text-muted);">₹</span>
                 <input type="number" id="amount" name="amount" placeholder="0.00" step="0.01" required 
                        style="border-radius: 0 8px 8px 0; flex: 1;">
             </div>
@@ -45,18 +44,12 @@
         <!-- Category Group -->
         <div class="form-group">
             <label for="category"><i class="fas fa-folder"></i> Category</label>
-            <input type="text" id="category" name="category" placeholder="e.g., Entertainment, Subscriptions" 
-                   list="subcategories" required>
-            <datalist id="subcategories">
-                <option value="Entertainment">
-                <option value="Subscriptions">
-                <option value="Utilities">
-                <option value="Shopping">
-                <option value="Healthcare">
-                <option value="Education">
-                <option value="Home">
-                <option value="Other">
-            </datalist>
+            <select id="category" name="category" required>
+                <option value="" disabled selected>-- Select a Category --</option>
+                {% for cat in categories %}
+                <option value="{{ cat.name }}">&#xf02b; &nbsp; {{ cat.name }}</option>
+                {% endfor %}
+            </select>
         </div>
 
         <!-- Billing Day Group -->

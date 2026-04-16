@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
 
 
@@ -17,24 +16,19 @@
         <!-- Source Group -->
         <div class="form-group">
             <label for="source"><i class="fas fa-briefcase"></i> Income Source</label>
-            <input type="text" id="source" name="source" placeholder="e.g., Salary, Freelance, Business" 
-                   list="sources" required>
-            <datalist id="sources">
-                <option value="Salary">
-                <option value="Freelance">
-                <option value="Business">
-                <option value="Investment">
-                <option value="Bonus">
-                <option value="Gift">
-                <option value="Other">
-            </datalist>
+            <select id="source" name="source" required>
+                <option value="" disabled selected>-- Select an Income Source --</option>
+                {% for cat in categories %}
+                <option value="{{ cat.name }}">&#xf02b; &nbsp; {{ cat.name }}</option>
+                {% endfor %}
+            </select>
         </div>
 
         <!-- Amount Group -->
         <div class="form-group">
             <label for="amount"><i class="fas fa-money-bill"></i> Amount</label>
-            <div style="display: flex; gap: 10px;">
-                <span style="display: flex; align-items: center; padding: 0 14px; background: #f1f5f9; border-radius: 8px 0 0 8px; font-weight: 600; color: #64748b;">₹</span>
+            <div style="display: flex;">
+                <span style="display: flex; align-items: center; padding: 0 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-right: none; border-radius: 8px 0 0 8px; font-weight: 600; color: var(--text-muted);">₹</span>
                 <input type="number" id="amount" name="amount" placeholder="0.00" step="0.01" required 
                        style="border-radius: 0 8px 8px 0; flex: 1;">
             </div>

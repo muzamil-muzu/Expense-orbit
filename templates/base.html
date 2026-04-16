@@ -8,13 +8,20 @@
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Custom Styles (Cache Busted) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?version=3.2">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+
+    <!-- PWA -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#0f172a">
 
     <style>
         @keyframes slideDown {
@@ -62,20 +69,41 @@
 </head>
 
 <body>
+    <script>
+        // Prevent theme flash
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-theme');
+        }
+    </script>
+    
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <div>
+        <div class="navbar-left">
             <a href="/" class="navbar-brand">
-                <i class="fas fa-satellite"></i> ExpenseOrbit
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="ExpenseOrbit Logo" class="navbar-logo">
+                ExpenseOrbit
             </a>
         </div>
-        <div class="navbar-nav">
-            <a href="/"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="/add"><i class="fas fa-plus-circle"></i> Add Expense</a>
-            <a href="/add_income"><i class="fas fa-money-bill"></i> Add Income</a>
-            <a href="{{ url_for('subscriptions') }}"><i class="fas fa-calendar-alt"></i> Subscriptions</a>
-            <a href="{{ url_for('download_report', month=request.args.get('month')) }}"><i class="fas fa-chart-bar"></i> Report</a>
-            <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+
+        <!-- Hamburger Button (Mobile) -->
+        <button class="hamburger" id="hamburger-btn" aria-label="Toggle navigation">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+
+        <div class="navbar-nav" id="navbar-nav">
+            <a href="#" id="theme-toggle" title="Toggle Theme">
+                <i class="fas fa-sun" id="theme-icon"></i> <span class="nav-label">Theme</span>
+            </a>
+            <a href="/"><i class="fas fa-home"></i> <span class="nav-label">Dashboard</span></a>
+            <a href="/add"><i class="fas fa-plus-circle"></i> <span class="nav-label">Add Expense</span></a>
+            <a href="/add_income"><i class="fas fa-money-bill"></i> <span class="nav-label">Add Income</span></a>
+            <a href="/categories"><i class="fas fa-tags"></i> <span class="nav-label">Categories</span></a>
+            <a href="/goals"><i class="fas fa-bullseye"></i> <span class="nav-label">Goals</span></a>
+            <a href="{{ url_for('subscriptions') }}"><i class="fas fa-calendar-alt"></i> <span class="nav-label">Subscriptions</span></a>
+            <a href="{{ url_for('download_report', month=request.args.get('month')) }}"><i class="fas fa-chart-bar"></i> <span class="nav-label">Report</span></a>
+            <a href="/logout" class="nav-logout"><i class="fas fa-sign-out-alt"></i> <span class="nav-label">Logout</span></a>
         </div>
     </nav>
 
@@ -99,5 +127,72 @@
 
     </div>
 
+    <!-- Features Logic -->
+    <script>
+        // --- Mobile Hamburger Menu ---
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const navbarNav = document.getElementById('navbar-nav');
+        
+        if (hamburgerBtn && navbarNav) {
+            hamburgerBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                hamburgerBtn.classList.toggle('active');
+                navbarNav.classList.toggle('open');
+            });
+
+            // Close menu when clicking a link
+            navbarNav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (link.id === 'theme-toggle') return;
+                    hamburgerBtn.classList.remove('active');
+                    navbarNav.classList.remove('open');
+                });
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!navbarNav.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                    hamburgerBtn.classList.remove('active');
+                    navbarNav.classList.remove('open');
+                }
+            });
+        }
+
+        // --- Theme Toggle ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        if (themeToggle && themeIcon) {
+            // Update icon on page load
+            if (document.body.classList.contains('light-theme')) {
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+            }
+
+            themeToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.body.classList.toggle('light-theme');
+                
+                if (document.body.classList.contains('light-theme')) {
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                } else {
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                }
+            });
+        }
+
+        // --- PWA Service Worker ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Hardcoded path since this file must load at root usually, but passing via static is fine for standard assets. 
+                // Wait, service worker scope depends on location. It should be at root. 
+                // We'll put sw.js in root or serve it via a route to give it root scope.
+                navigator.serviceWorker.register('/sw.js')
+                    .catch(err => console.log('SW Registration failed: ', err));
+            });
+        }
+    </script>
 </body>
 </html>

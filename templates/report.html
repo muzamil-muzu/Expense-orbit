@@ -22,7 +22,7 @@
             <i class="fas fa-info-circle"></i> Download a PDF report of your financial summary and transactions.
         </p>
 
-        <a href="{{ url_for('index') }}" class="btn" style="width: 100%; justify-content: center;">
+        <a href="{{ url_for('download_report') }}" class="btn" style="width: 100%; justify-content: center;">
             <i class="fas fa-file-pdf"></i> Generate PDF Report
         </a>
     </div>
@@ -32,17 +32,17 @@
 <div class="summary-grid" style="margin-bottom: 30px;">
     <div class="card income">
         <h3><i class="fas fa-arrow-down" style="color: #10b981;"></i> Total Income</h3>
-        <p>₹ 0.00</p>
+        <p>₹ {{ "%.2f"|format(total_lifetime_income) }}</p>
     </div>
 
     <div class="card expense">
         <h3><i class="fas fa-arrow-up" style="color: #ef4444;"></i> Total Expense</h3>
-        <p>₹ 0.00</p>
+        <p>₹ {{ "%.2f"|format(total_lifetime_expense) }}</p>
     </div>
 
     <div class="card savings">
         <h3><i class="fas fa-piggy-bank" style="color: #6366f1;"></i> Net Balance</h3>
-        <p>₹ 0.00</p>
+        <p>₹ {{ "%.2f"|format(total_balance) }}</p>
     </div>
 </div>
 
@@ -78,16 +78,22 @@
 </div>
 
 <script>
+    // Server-injected data
+    const monthsLabels = JSON.parse('{{ months_labels | tojson | safe }}');
+    const incomeData = JSON.parse('{{ income_data | tojson | safe }}');
+    const expenseData = JSON.parse('{{ expense_data | tojson | safe }}');
+    const savingsData = JSON.parse('{{ savings_data | tojson | safe }}');
+
     // Sample report chart data
     const reportBarCtx = document.getElementById('reportBarChart').getContext('2d');
     new Chart(reportBarCtx, {
         type: 'bar',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: monthsLabels,
             datasets: [
                 {
                     label: 'Income',
-                    data: [5000, 5000, 5000, 5000, 5000, 5000],
+                    data: incomeData,
                     backgroundColor: 'rgba(16, 185, 129, 0.8)',
                     borderColor: 'rgba(16, 185, 129, 1)',
                     borderWidth: 2,
@@ -95,7 +101,7 @@
                 },
                 {
                     label: 'Expense',
-                    data: [3500, 3200, 3800, 3400, 3600, 3300],
+                    data: expenseData,
                     backgroundColor: 'rgba(239, 68, 68, 0.8)',
                     borderColor: 'rgba(239, 68, 68, 1)',
                     borderWidth: 2,
@@ -127,10 +133,10 @@
     new Chart(reportLineCtx, {
         type: 'line',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: monthsLabels,
             datasets: [{
                 label: 'Monthly Savings',
-                data: [1500, 1800, 1200, 1600, 1400, 1700],
+                data: savingsData,
                 borderColor: '#6366f1',
                 backgroundColor: 'rgba(99, 102, 241, 0.1)',
                 borderWidth: 3,

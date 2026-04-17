@@ -136,8 +136,8 @@ ExpenseOrbit/
 ### Step 1 — Clone the repository
 
 ```bash
-git clone https://github.com/username/ExpenseOrbit.git
-cd ExpenseOrbit
+git clone https://github.com/muzamil-muzu/Expense-orbit.git
+cd Expense-orbit
 ```
 
 ### Step 2 — Install Python dependencies

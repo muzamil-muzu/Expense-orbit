@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session, make_response, send_from_directory, jsonify
 import pytesseract
-from PIL import Image
+from PIL import Image as PILImage
 import sys
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -25,7 +25,30 @@ app = Flask(__name__)
 app.secret_key = "secret_key"
 
 if sys.platform == 'win32':
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    # Try multiple common paths for Tesseract OCR on Windows
+    possible_tesseract_paths = [
+        r'C:\Program Files\Tesseract-OCR\tesseract.exe',
+        r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe',
+        r'C:\Users\\' + os.getlogin() + r'\AppData\Local\Tesseract-OCR\tesseract.exe',
+        r'C:\Users\\' + os.getlogin() + r'\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
+    ]
+    
+    tesseract_found = False
+    for path in possible_tesseract_paths:
+        if os.path.exists(path):
+            pytesseract.pytesseract.tesseract_cmd = path
+            tesseract_found = True
+            break
+    
+    if not tesseract_found:
+        # Fallback to 'tesseract' command if it's in the system PATH
+        import subprocess
+        try:
+            subprocess.run(['tesseract', '--version'], capture_output=True, check=True)
+            # If no exception, it's in the path
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            # Not in path, we'll handle this in the OCR route
+            pass
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'expenses.db')
@@ -118,12 +141,27 @@ def seed_default_categories(user_id):
 
 # ================= DATE PARSER =================
 def parse_date(date_str):
-    for fmt in ('%Y-%m-%d', '%d-%m-%Y', '%m/%d/%Y', '%d/%m/%Y', '%Y/%m/%d'):
+    for fmt in ('%Y-%m-%d', '%d-%m-%Y', '%m/%d/%Y', '%d/%m/%Y', '%Y/%m/%d', '%d-%b-%Y', '%d %b %Y', '%d-%B-%Y', '%d %B %Y', '%d/%b/%Y', '%b %d, %Y', '%B %d, %Y'):
         try:
             return datetime.strptime(date_str, fmt)
         except ValueError:
-            pass
+            continue
     return datetime.today()
+
+# ================= AUTO-CATEGORIZATION =================
+def get_category_by_merchant(note):
+    mapping = {
+        r'uber|lyft|taxi|bus|train|metro': 'Transport',
+        r'mcdonalds|burger king|starbucks|restaurant|cafe|grocery|walmart|kroger': 'Food',
+        r'netflix|hulu|spotify|steam|playstation|xbox': 'Entertainment',
+        r'amazon|ebay|target|shop': 'Shopping',
+        r'electric|water|gas|internet|verizon|at&t': 'Utilities',
+        r'hospital|pharmacy|doctor|clinic': 'Healthcare'
+    }
+    for pattern, category in mapping.items():
+        if re.search(pattern, note, re.IGNORECASE):
+            return category
+    return "Other"
 
 # ============== LOGIN REQUIRED ==============
 def login_required(f):
@@ -974,19 +1012,30 @@ def scan_receipt():
         return jsonify({"error": "Empty filename"}), 400
         
     try:
-        image = Image.open(file)
+        image = PILImage.open(file)
         text = pytesseract.image_to_string(image)
         
         amount = None
         date_str = None
         
+        # Clean commas out to handle large formats like 1,370.25 perfectly
+        clean_text = text.replace(',', '')
+        
         # Heuristics for Amount
-        amount_match = re.search(r'(?:total|amount|due|amount due|sum)[\s:$-]*([\d,]+\.\d{2})', text, re.IGNORECASE)
+        amount_match = re.search(r'(?i)(?<!sub)(?:total|amount|due|sum|tot|pay)[^\d]*(\d+\.\d{2})', clean_text)
         if amount_match:
-            amount = float(amount_match.group(1).replace(',', ''))
+            try: amount = float(amount_match.group(1))
+            except: pass
             
+        if not amount:
+            prices = re.findall(r'\b\d+\.\d{2}\b', clean_text)
+            if prices:
+                valid_prices = [float(p) for p in prices]
+                if valid_prices:
+                    amount = max(valid_prices)
+                    
         # Heuristics for Date
-        date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})', text)
+        date_match = re.search(r'(\d{1,2}[./\-\s]+[A-Za-z]{3,9}[./\-\s]+\d{2,4}|\d{1,4}[./\-]\d{1,2}[./\-]\d{1,4})', text)
         if date_match:
             try:
                 date_str = parse_date(date_match.group(1)).strftime('%Y-%m-%d')
@@ -998,16 +1047,42 @@ def scan_receipt():
         merchant = lines[0] if lines else "Unknown Vendor"
         merchant = re.sub(r'[^A-Za-z0-9\s&]', '', merchant)
         
+        # Categorization logic based on merchant
+        category = ""
+        merchant_lower = merchant.lower()
+        if any(m in merchant_lower for m in ['swiggy', 'zomato', 'mcdonalds', 'kfc', 'starbucks', 'foods', 'restaurant']):
+            category = "Food"
+        elif any(m in merchant_lower for m in ['uber', 'ola', 'rapido', 'irctc', 'makemytrip', 'redbus', 'transport', 'taxi', 'railway']):
+            category = "Transport"
+        elif any(m in merchant_lower for m in ['amazon', 'flipkart', 'myntra', 'ajio', 'blinkit', 'zepto', 'instamart', 'store', 'shop', 'freshmart', 'superstore', 'grocery', 'market']):
+            category = "Shopping"
+            
         return jsonify({
             "success": True,
             "amount": amount,
             "date": date_str,
             "merchant": merchant, 
+            "category": category,
             "note": f"Scanned receipt from {merchant}"
         })
         
     except Exception as e:
-        return jsonify({"error": str(e), "message": "OCR failed. Ensure Tesseract is installed."}), 500
+        error_msg = str(e)
+        print(f"OCR ERROR: {error_msg}")
+        detailed_message = f"Process Failed: {error_msg}"
+        tesseract_link = "https://github.com/UB-Mannheim/tesseract/wiki"
+        
+        if "tesseract is not installed" in error_msg.lower() or "no such file" in error_msg.lower():
+            detailed_message = "Tesseract OCR was not found. Please install it to use the AI Receipt Scanner."
+        elif "unidentified image" in error_msg.lower():
+            detailed_message = "Invalid image format. Please ensure you are uploading a standard image file (JPG, PNG)."
+            
+        return jsonify({
+            "error": error_msg, 
+            "message": detailed_message,
+            "install_url": tesseract_link if "tesseract" in detailed_message.lower() else None,
+            "is_missing": True if ("tesseract is not installed" in error_msg.lower() or "no such file" in error_msg.lower()) else False
+        }), 500
 
 # ================= SERVICE WORKER =================
 @app.route('/sw.js')

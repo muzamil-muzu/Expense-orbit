@@ -38,23 +38,30 @@ self.addEventListener('fetch', (event) => {
   // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
+  // Network First for HTML and Navigation
+  if (event.request.mode === 'navigate' || event.request.headers.get('accept').includes('text/html')) {
+      event.respondWith(
+          fetch(event.request).catch(() => {
+              return caches.match(event.request).then((cacheResponse) => {
+                  return cacheResponse || new Response(`
+                      <div style="font-family: sans-serif; padding: 20px; text-align: center; color: white; background: #0f172a; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                          <h2>You are offline</h2>
+                          <p>Reconnect to the internet to access ExpenseOrbit.</p>
+                      </div>
+                  `, {
+                      headers: { 'Content-Type': 'text/html' }
+                  });
+              });
+          })
+      );
+      return;
+  }
+
+  // Cache First for other assets (CSS, JS, Images)
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Return cached response or fetch from network
-        return response || fetch(event.request).catch(() => {
-            // Basic offline fallback for navigation requests
-            if (event.request.mode === 'navigate') {
-                return new Response(`
-                    <div style="font-family: sans-serif; padding: 20px; text-align: center; color: white; background: #0f172a; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <h2>You are offline</h2>
-                        <p>Reconnect to the internet to access ExpenseOrbit.</p>
-                    </div>
-                `, {
-                    headers: { 'Content-Type': 'text/html' }
-                });
-            }
-        });
+        return response || fetch(event.request);
       })
   );
 });

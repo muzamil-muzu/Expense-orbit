@@ -106,7 +106,11 @@
             uploadBtn.disabled = false;
             
             if (data.error) {
-                statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + data.message;
+                let errorHtml = `<i class="fas fa-exclamation-triangle"></i> ${data.message}`;
+                if (data.install_url) {
+                    errorHtml += `<br><a href="${data.install_url}" target="_blank" style="color: #4FACFE; text-decoration: underline; margin-top: 5px; display: inline-block;">Download Tesseract OCR Here &raquo;</a>`;
+                }
+                statusEl.innerHTML = errorHtml;
                 statusEl.style.color = 'var(--danger)';
                 return;
             }
@@ -117,6 +121,15 @@
             if (data.amount) document.getElementById('amount').value = data.amount;
             if (data.date) document.getElementById('date').value = data.date;
             if (data.note) document.getElementById('note').value = data.note;
+            if (data.category && data.category !== "") {
+                let options = document.getElementById('category').options;
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i].text.toLowerCase().includes(data.category.toLowerCase()) || options[i].value === data.category) {
+                        document.getElementById('category').selectedIndex = i;
+                        break;
+                    }
+                }
+            }
             
         })
         .catch(err => {
